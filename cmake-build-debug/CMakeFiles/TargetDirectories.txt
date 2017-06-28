@@ -1,0 +1,3 @@
+/home/grigo/CLionProjects/2.1 task/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/grigo/CLionProjects/2.1 task/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/grigo/CLionProjects/2.1 task/cmake-build-debug/CMakeFiles/2_1_task.dir
