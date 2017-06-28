@@ -1,1 +1,0 @@
-/usr/bin/c++   -g   CMakeFiles/2_1_task.dir/main.cpp.o CMakeFiles/2_1_task.dir/budlleSort.c.o  -o 2_1_task 
