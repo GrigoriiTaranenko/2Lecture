@@ -10,11 +10,19 @@
 #include <stdlib.h>
 
 #include "bmp.h"
-bool checkPhoto() {
-    
-    return false;
-}
+/**
+ * Проверка файла
+ * @param file
+ * @return
+ */
+FILE *card;
+FILE *jpeg;
 
+bool checkPhoto(FILE *file);
+
+void offsetByte(BYTE startByte[4]);
+
+void 
 
 int main(int argc, char* argv[])
 {
@@ -22,11 +30,13 @@ int main(int argc, char* argv[])
         printf("Недостаточно переменных");
         return 1;
     }
-    FILE *card;
-    FILE *jpeg;
+
     card = fopen(argv[1], "r");
     jpeg = fopen("mas.jpeg", "w");
 
+    if (card == null) {
+        return false;
+    }
 
     BYTE arrayJpeg[512];
     BYTE checkJpeg[3];
