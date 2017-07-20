@@ -10,6 +10,11 @@
 #include <stdlib.h>
 
 #include "bmp.h"
+bool checkPhoto() {
+    
+    return false;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -27,13 +32,18 @@ int main(int argc, char* argv[])
     BYTE checkJpeg[3];
     BYTE byt;
     int i = 0;
+    int k = 1000000;
     size_t result = fread(&byt, sizeof(BYTE), 1, card);
     printf("byt = %d \n", byt);
-    while (byt != 255  && result == 1) {
+    while (k != 0  && result == sizeof(BYTE)) {
         i++;
-        printf ("byt = %x \n", byt);
+    //    printf ("byt = %x \n", byt);
         result = fread(&byt, sizeof(BYTE), 1, card);
+        if (byt == 255) {
+            k --;
+        }
     }
+    printf("i = %i байт \n", i);
     printf("байт равен %x \n", byt);
     fread(&byt, sizeof(BYTE), 1, card);
     printf("байт равен %x \n", byt);
