@@ -81,7 +81,7 @@ bool createFile(int *numberJpeg) {
         printf("Неудалось создать файл");
         return false;
     }
-    *numberJpeg++;
+    *numberJpeg += 1;
     return true;
 }
 
@@ -106,7 +106,7 @@ void swap(BYTE array[]) {
 bool getByteBeforeJpeg(BYTE result[4]) {
     BYTE offset;
     fread(&result, 4 * sizeof(BYTE), 1, card);
-    while (result == sizeof(BYTE) + 3) {
+    while (sizeof(BYTE [4]) == sizeof(BYTE) + 3) {
         if (checkBeginJpeg(result)) {
             return true;
         } else {
