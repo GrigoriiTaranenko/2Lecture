@@ -18,7 +18,7 @@
  * @return
  */
 FILE *card;
-FILE *jpeg;
+FILE *jpegFile;
 
 const BYTE chaos[] = {0xff, 0xd8, 0xff};
 
@@ -28,7 +28,7 @@ void swap(BYTE array[]);
 
 bool getByteBeforeJpeg(BYTE result[4]);
 
-bool checkBeginJpeg(BYTE arrayJpeg[512]);
+bool checkBeginJpeg(BYTE arrayJpeg[]);
 
 void firstWriteJPG(BYTE jpeg[4], BYTE arrayJpeg[512]);
 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     if (!createFile(&numberJpeg)) {
         return 1;
     }
-    firstWriteJPG(jpeg, arrayJpeg);
+    firstWriteJPG(checkJpeg, arrayJpeg);
 
     fclose(card);
     return 0;
@@ -76,8 +76,8 @@ bool createFile(int *numberJpeg) {
     char *nameFile;
     sprintf(nameFile, "%d", *numberJpeg);
     strncat(nameFile, ".jpeg", 5);
-    jpeg = fopen(nameFile, "w");
-    if (jpeg == NULL) {
+    jpegFile = fopen(nameFile, "w");
+    if (jpegFile == NULL) {
         printf("Неудалось создать файл");
         return false;
     }
@@ -107,11 +107,11 @@ bool getByteBeforeJpeg(BYTE result[4]) {
     BYTE offset;
     fread(&result, 4 * sizeof(BYTE), 1, card);
     while (result == sizeof(BYTE) + 3) {
-        if (checkBeginJpeg(jpeg)) {
+        if (checkBeginJpeg(result)) {
             return true;
         } else {
             swap(result);
-            fread(&result[3], sizeof(BYTE), 1, jpeg);
+            fread(&result[3], sizeof(BYTE), 1, card);
         }
     }
     return false;
@@ -135,7 +135,7 @@ void firstWriteJPG(BYTE jpeg[4], BYTE arrayJpeg[512]) {
 
 bool writeFile(BYTE arrayJpeg[512]) {
     if (checkBeginJpeg(arrayJpeg)) {
-        fclose(jpeg);
+        fclose(jpegFile);
     }
 }
 
