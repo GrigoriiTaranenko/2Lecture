@@ -56,17 +56,16 @@ int main(int argc, char* argv[])
         printf("Неудалось открыть файл");
         return false;
     }
+
     int numberJpeg = 1;
     size_t countElement;
     BYTE arrayJpeg[SIZE_JPEG_BLOCK];
     BYTE checkJpeg[SIZE_RECOGNIZE_JPEG];
 
-    if (!getByteBeforeJpeg(checkJpeg)) {
-        printf("Не найденно последовательности");
-        return 1;
-    }
+    getByteBeforeJpeg(checkJpeg);
     createFile(&numberJpeg);
     firstWriteVariable(checkJpeg, arrayJpeg, &countElement);
+
     while (countElement == SIZE_JPEG_BLOCK) {
         if (writeFile(arrayJpeg, &numberJpeg)) {
             createFile(arrayJpeg);
@@ -121,7 +120,8 @@ bool getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]) {
             size = 3 + fread(&result[3], sizeof(BYTE), 1, card);
         }
     }
-    return false;
+    printf("Не найденно последовательности");
+    exit(EXIT_FAILURE);
 }
 
 bool checkBeginJpeg(BYTE arrayJpeg[SIZE_JPEG_BLOCK]) {
