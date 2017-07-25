@@ -20,7 +20,7 @@
 FILE *card;
 FILE *jpegFile;
 
-const BYTE SIZE_JPEG_BLOCK = 512;
+const int SIZE_JPEG_BLOCK = 512;
 const BYTE SIZE_RECOGNIZE_JPEG = 4;
 
 const BYTE chaos[] = {0xff, 0xd8, 0xff};
@@ -29,13 +29,13 @@ void createFile(int *numberJpeg);
 
 void swap(BYTE array[]);
 
-bool getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]);
+void getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]);
 
 bool checkBeginJpeg(BYTE arrayJpeg[]);
 
-bool firstWriteVariable(BYTE jpeg[SIZE_RECOGNIZE_JPEG], BYTE arrayJpeg[SIZE_JPEG_BLOCK], size_t *countElement);
+void firstWriteVariable(BYTE jpeg[SIZE_RECOGNIZE_JPEG], BYTE arrayJpeg[SIZE_JPEG_BLOCK], size_t *countElement);
 
-bool writeFile(BYTE arrayJpeg[SIZE_JPEG_BLOCK], int *numberJPEG);
+void writeFile(BYTE arrayJpeg[SIZE_JPEG_BLOCK], int *numberJpeg);
 
 void offsetByte(BYTE arrayJpeg[SIZE_JPEG_BLOCK]);
 
@@ -45,32 +45,32 @@ void errorWriteFile();
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2) {
-        printf("Недостаточно переменных");
-        return 1;
-    }
-
-    card = fopen(argv[1], "r");
-
-    if (card == NULL) {
-        printf("Неудалось открыть файл");
-        return false;
-    }
 
     int numberJpeg = 1;
+
     size_t countElement;
     BYTE arrayJpeg[SIZE_JPEG_BLOCK];
     BYTE checkJpeg[SIZE_RECOGNIZE_JPEG];
 
+    if (argc != 2) {
+        printf("Недостаточно переменных \n");
+        return 1;
+    }
+
+    card = fopen("card.raw", "r");
+    if (card == NULL) {
+        printf("Неудалось открыть файл \n");
+        return 1;
+    }
+
     getByteBeforeJpeg(checkJpeg);
-    createFile(&numberJpeg);
     firstWriteVariable(checkJpeg, arrayJpeg, &countElement);
 
     while (countElement == SIZE_JPEG_BLOCK) {
-        if (writeFile(arrayJpeg, &numberJpeg)) {
-            createFile(arrayJpeg);
-        };
+        writeFile(arrayJpeg, &numberJpeg);
+        countElement = fread(arrayJpeg, 1, SIZE_JPEG_BLOCK, card);
     }
+
     fclose(card);
     return 0;
 }
@@ -85,7 +85,7 @@ void createFile(int *numberJpeg) {
     strncat(nameFile, ".jpeg", 5);
     jpegFile = fopen(nameFile, "w");
     if (jpegFile == NULL) {
-        printf("Неудалось создать файл");
+        printf("Неудалось создать файл \n");
         exit(EXIT_FAILURE);
     }
     *numberJpeg += 1;
@@ -109,18 +109,18 @@ void swap(BYTE array[]) {
  * @return bool При нахождении возвращает True при ненахождении возвращения false
  * @var BYTE result[]
  */
-bool getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]) {
+void getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]) {
     BYTE offset;
     size_t size = fread(&result, 1, SIZE_RECOGNIZE_JPEG, card);
     while (size ==  SIZE_RECOGNIZE_JPEG) {
         if (checkBeginJpeg(result)) {
-            return true;
+            return;
         } else {
             swap(result);
             size = 3 + fread(&result[3], sizeof(BYTE), 1, card);
         }
     }
-    printf("Не найденно последовательности");
+    printf("Не найденно последовательности \n");
     exit(EXIT_FAILURE);
 }
 
@@ -132,18 +132,17 @@ bool checkBeginJpeg(BYTE arrayJpeg[SIZE_JPEG_BLOCK]) {
  * Первая запись в массив jpeg блока
  * @param int jpeg[4]
  */
-bool firstWriteVariable(BYTE jpeg[SIZE_RECOGNIZE_JPEG], BYTE arrayJpeg[SIZE_JPEG_BLOCK], size_t *countElement) {
+void firstWriteVariable(BYTE jpeg[SIZE_RECOGNIZE_JPEG], BYTE arrayJpeg[SIZE_JPEG_BLOCK], size_t *countElement) {
     *countElement = fread(arrayJpeg, 1, SIZE_JPEG_BLOCK - SIZE_RECOGNIZE_JPEG, card);
     if (*countElement != SIZE_JPEG_BLOCK - SIZE_RECOGNIZE_JPEG) {
-        printf("Слишком мало значений файл");
-        return false;
+        printf("Слишком мало значений файл \n");
+        exit(EXIT_FAILURE);
     }
     offsetByte(arrayJpeg);
     for (int i = 0; i < SIZE_RECOGNIZE_JPEG; i++) {
         arrayJpeg[i] = jpeg[i];
     }
     *countElement += SIZE_RECOGNIZE_JPEG;
-    return true;
 }
 
 /**
@@ -151,13 +150,15 @@ bool firstWriteVariable(BYTE jpeg[SIZE_RECOGNIZE_JPEG], BYTE arrayJpeg[SIZE_JPEG
  * @param arrayJpeg
  * @return
  */
-bool writeFile(BYTE arrayJpeg[SIZE_JPEG_BLOCK], int *numberJPEg) {
+void writeFile(BYTE arrayJpeg[SIZE_JPEG_BLOCK], int *numberJpeg) {
     if (checkBeginJpeg(arrayJpeg)) {
         fclose(jpegFile);
-        fwrite(arrayJpeg, SIZE_JPEG_BLOCK, 1, jpegFile);
-        return true;
+        createFile(numberJpeg);
+        fwrite(arrayJpeg, 1, SIZE_JPEG_BLOCK, card);
+    } else {
+        fwrite(arrayJpeg, 1, SIZE_JPEG_BLOCK, card);
     }
-    return false;
+
 }
 
 /**
