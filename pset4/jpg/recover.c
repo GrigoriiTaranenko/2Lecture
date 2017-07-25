@@ -29,7 +29,7 @@ void createFile(int *numberJpeg);
 
 void swap(BYTE array[]);
 
-void getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]);
+void getByteBeforeJpeg(BYTE checkJpeg[SIZE_RECOGNIZE_JPEG]);
 
 bool checkBeginJpeg(BYTE arrayJpeg[]);
 
@@ -65,7 +65,10 @@ int main(int argc, char* argv[])
 
     getByteBeforeJpeg(checkJpeg);
     firstWriteVariable(checkJpeg, arrayJpeg, &countElement);
+    printf("[0] = %d [1] =%d [2] = %d [3] = %d \n", arrayJpeg[0], arrayJpeg[1], arrayJpeg[2], arrayJpeg[3]);
 
+    createFile(&numberJpeg);
+    printf("[0] = %d [1] =%d [2] = %d [3] = %d \n", arrayJpeg[0], arrayJpeg[1], arrayJpeg[2], arrayJpeg[3]);
     while (countElement == SIZE_JPEG_BLOCK) {
         writeFile(arrayJpeg, &numberJpeg);
         countElement = fread(arrayJpeg, 1, SIZE_JPEG_BLOCK, card);
@@ -80,7 +83,7 @@ int main(int argc, char* argv[])
  * @param numberJpeg - номер фото
  */
 void createFile(int *numberJpeg) {
-    char *nameFile;
+    char nameFile[20];
     sprintf(nameFile, "%d", *numberJpeg);
     strncat(nameFile, ".jpeg", 5);
     jpegFile = fopen(nameFile, "w");
@@ -97,10 +100,10 @@ void createFile(int *numberJpeg) {
  * @param array
  */
 void swap(BYTE array[]) {
-    for (int i = 0; i<2; i++) {
+    for (int i = 0; i<3; i++) {
         BYTE c = array[i];
-        array[i+1] = array[i];
-        array[i] = c;
+        array[i] = array[i+1];
+        array[i+1] = c;
     }
 }
 
@@ -109,18 +112,21 @@ void swap(BYTE array[]) {
  * @return bool При нахождении возвращает True при ненахождении возвращения false
  * @var BYTE result[]
  */
-void getByteBeforeJpeg(BYTE result[SIZE_RECOGNIZE_JPEG]) {
+void getByteBeforeJpeg(BYTE checkJpeg[SIZE_RECOGNIZE_JPEG]) {
     BYTE offset;
-    size_t size = fread(&result, 1, SIZE_RECOGNIZE_JPEG, card);
+    size_t size = fread(checkJpeg, 1, SIZE_RECOGNIZE_JPEG, card);
+    int i= 0;
     while (size ==  SIZE_RECOGNIZE_JPEG) {
-        if (checkBeginJpeg(result)) {
+        if (checkBeginJpeg(checkJpeg)) {
+            printf("[0] = %d [1] =%d [2] = %d [3] = %d \n", checkJpeg[0], checkJpeg[1], checkJpeg[2], checkJpeg[3]);
             return;
         } else {
-            swap(result);
-            size = 3 + fread(&result[3], sizeof(BYTE), 1, card);
+            swap(checkJpeg);
+            size = 3 + fread(&checkJpeg[3], 1, 1, card);
         }
     }
     printf("Не найденно последовательности \n");
+    fclose(jpegFile);
     exit(EXIT_FAILURE);
 }
 
@@ -142,21 +148,23 @@ void firstWriteVariable(BYTE jpeg[SIZE_RECOGNIZE_JPEG], BYTE arrayJpeg[SIZE_JPEG
     for (int i = 0; i < SIZE_RECOGNIZE_JPEG; i++) {
         arrayJpeg[i] = jpeg[i];
     }
-    *countElement += SIZE_RECOGNIZE_JPEG;
+    printf("[0] = %d [1] =%d [2] = %d [3] = %d \n", arrayJpeg[0], arrayJpeg[1], arrayJpeg[2], arrayJpeg[3]);
+    *countElement = 512;
 }
 
 /**
  * Создает новый файл если у
- * @param arrayJpeg
- * @return
+ * @param Byte arrayJpeg[]
+ * @param int *numberJpeg
  */
 void writeFile(BYTE arrayJpeg[SIZE_JPEG_BLOCK], int *numberJpeg) {
     if (checkBeginJpeg(arrayJpeg)) {
+        printf("[0] = %d [1] =%d [2] = %d [3] = %d \n", arrayJpeg[0], arrayJpeg[1], arrayJpeg[2], arrayJpeg[3]);
         fclose(jpegFile);
         createFile(numberJpeg);
-        fwrite(arrayJpeg, 1, SIZE_JPEG_BLOCK, card);
+        fwrite(arrayJpeg, 1, SIZE_JPEG_BLOCK, jpegFile);
     } else {
-        fwrite(arrayJpeg, 1, SIZE_JPEG_BLOCK, card);
+        fwrite(arrayJpeg, 1, SIZE_JPEG_BLOCK, jpegFile);
     }
 
 }
@@ -166,7 +174,7 @@ void writeFile(BYTE arrayJpeg[SIZE_JPEG_BLOCK], int *numberJpeg) {
  * @param arrayJpeg
  */
 void offsetByte(BYTE arrayJpeg[SIZE_JPEG_BLOCK]) {
-    for (int i = SIZE_JPEG_BLOCK - SIZE_RECOGNIZE_JPEG; i>= 0; i--) {
+    for (int i = SIZE_JPEG_BLOCK - SIZE_RECOGNIZE_JPEG - 1; i>= 0; i--) {
         arrayJpeg[i + SIZE_RECOGNIZE_JPEG] = arrayJpeg[i];
     }
 }
